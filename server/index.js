@@ -5,12 +5,14 @@ const path = require('path');
 const db = require('../database/index.js');
 const cors = require('cors');
 const shrinkRay = require('shrink-ray-current');
+const bodyParser = require('body-parser');
 
 
 app.options('*', cors());
 app.get('*', cors());
 app.use(cors());
 app.use(shrinkRay());
+app.use(bodyParser.json());
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
@@ -68,7 +70,64 @@ app.get('/Information/:productId', function (req, res) {
   }
 });
 
+// CREATE
+app.post('/Information/Create', function (req, res) {
+  console.log('CREATE route')
+  const product = {
+    productId: req.body.productId,
+    aspectRatio: req.body.aspectRatio,
+    rating: req.body.rating,
+    dimensions: req.body.dimensions,
+    format: req.body.format,
+    runTime: req.body.runTime,
+    releaseDate: req.body.releaseDate,
+    cast: req.body.cast,
+    studio: req.body.studio,
+    numberOfDisks: req.body.numberOfDisks
+  };
 
+  console.log('product: ', product)
+
+  return db.createInformation(product)
+    .then(result => {
+      console.log('Create successful');
+      res.send(result);
+    })
+    .catch(err => {
+      console.log('Error in create route')
+    });
+});
+
+// UPDATE
+app.put('/Information/Update/:productId', function (req, res) {
+  console.log('UPDATE route')
+
+  console.log('req.body: ', req.body)
+
+  return db.updateInformation(req.params.productId, req.body)
+    .then(result => {
+      console.log('Update successful');
+      res.send(result);
+    })
+    .catch(err => {
+      console.log('Error in create route')
+    });
+});
+
+// DELETE
+app.delete('/Information/Delete/:productId', function (req, res) {
+  console.log('DELETE route')
+
+  return db.deleteInformation(req.params.productId)
+    .then(result => {
+      console.log('Delete successful');
+      res.send('Delete successful: ', result);
+    })
+    .catch(err => {
+      console.log('Error in delete route: ', err)
+      res.send('Error in delete route: ', err);
+    });
+});
 
 app.listen(port, () => {
   console.log(`Server now listening at http://localhost:${port}`);

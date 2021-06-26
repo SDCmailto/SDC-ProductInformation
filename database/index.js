@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
-
-mongoose.connect('mongodb://mongo:27017/Information', {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect('mongodb://localhost:27017/Information', {useNewUrlParser: true, useUnifiedTopology: true});
 const db = mongoose.connection;
 
 db.on('error', console.error.bind(console, 'Error Connecting Database'));
@@ -31,6 +30,24 @@ let returnData = (id) => {
   return Information.findOne({productId: id}).exec();
 };
 
+let createInformation = (information) => {
+  return Information.insertMany([information]).exec();
+};
+
+ let updateInformation = (id, information) => {
+  return Information.findOneAndUpdate({productId: id}, {
+    $set: information
+  }).exec();
+};
+
+let deleteInformation = (id) => {
+  return Information.deleteOne({
+    productId: id
+  }).exec();
+};
 
 module.exports.returnData = returnData;
 module.exports.Information = Information;
+module.exports.createInformation = createInformation;
+module.exports.updateInformation = updateInformation;
+module.exports.deleteInformation = deleteInformation;

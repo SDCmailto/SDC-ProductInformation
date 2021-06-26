@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import ProductInfo from './components/productInfo.jsx';
+import ProductInfo from './components/ProductInfo.jsx';
 import axios from 'axios';
 
 class App extends React.Component {
@@ -15,8 +15,8 @@ class App extends React.Component {
       avgReviews: 0,
       totalReviews: 0
     };
-    this.informationip = env.INFORMATION_IP || localhost;
-    this.reviewsip = env.REVIEW_IP || localhost;
+    this.informationip = /* env.INFORMATION_IP || */ 'localhost';
+    // this.reviewsip = env.REVIEW_IP || localhost;
   }
 
 
@@ -33,16 +33,16 @@ class App extends React.Component {
         console.log('ERROR IN AXIOS GET REQUEST', error);
       });
 
-    axios.get(`http://${this.reviewsip}:3004/averagereview/` + this.state.id)
-      .then((response) =>
-        that.setState({
-          avgReviews: response.data.averageReviews,
-          totalReviews: response.data.totalReviews
-        })
-      )
-      .catch((error) =>
-        console.log('ERROR GETTING REVIEW', error)
-      );
+    // axios.get(`http://${this.reviewsip}:3004/averagereview/` + this.state.id)
+    //   .then((response) =>
+    //     that.setState({
+    //       avgReviews: response.data.averageReviews,
+    //       totalReviews: response.data.totalReviews
+    //     })
+    //   )
+    //   .catch((error) =>
+    //     console.log('ERROR GETTING REVIEW', error)
+    //   );
   }
 
 
