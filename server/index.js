@@ -71,7 +71,7 @@ app.get('/Information/:productId', function (req, res) {
 });
 
 // CREATE
-app.post('/Information/Create', function (req, res) {
+app.post('/Information/', function (req, res) {
   console.log('CREATE route')
   const product = {
     productId: req.body.productId,
@@ -99,7 +99,7 @@ app.post('/Information/Create', function (req, res) {
 });
 
 // UPDATE
-app.put('/Information/Update/:productId', function (req, res) {
+app.put('/Information/:productId', function (req, res) {
   console.log('UPDATE route')
 
   console.log('req.body: ', req.body)
@@ -115,7 +115,7 @@ app.put('/Information/Update/:productId', function (req, res) {
 });
 
 // DELETE
-app.delete('/Information/Delete/:productId', function (req, res) {
+app.delete('/Information/:productId', function (req, res) {
   console.log('DELETE route')
 
   return db.deleteInformation(req.params.productId)
