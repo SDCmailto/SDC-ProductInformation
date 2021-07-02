@@ -28,7 +28,7 @@ let seedData = () => {
   return information;
 };
 
-// const data = seedData();
+const data = seedData();
 console.log(data);
 
 const save = (data) => {
@@ -44,6 +44,6 @@ const save = (data) => {
   });
 };
 
-// save(data);
+save(data);
 
 
