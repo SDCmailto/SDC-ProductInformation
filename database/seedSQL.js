@@ -73,7 +73,7 @@ const seedProduct = async function() {
   const formatCount = parseInt(formatCountRes.rows[0].rowcount);
   const studioCount = parseInt(studioCountRes.rows[0].rowcount);
 
-  const productCSVPath = '/home/wylie/coding/hackreactor/sdc/SDC-ProductInformation/database/product.csv';
+  const productCSVPath = '/Users/wylie/Documents/coding/hackreactor/sdc/SDC-ProductInformation/database/product.csv';
 
   let writeStream = fs.createWriteStream(productCSVPath);
 
@@ -98,7 +98,7 @@ const seedProduct = async function() {
   writeStream.end();
 
   // having some trouble closing the writeStream
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise(r => setTimeout(r, 3000));
 
   const tableName = 'PRODUCT';
   const columnNames = ['ASPECT_RATIO', 'RATING_ID', 'DIMENSIONS', 'FORMAT_ID', 'RUNTIME', 'RELEASE_DATE', 'NUMBER_OF_DISKS', 'STUDIO_ID'];
@@ -117,24 +117,24 @@ const seedProduct = async function() {
 
 // 4 cast members per product
 const seedProductCast = async function() {
-  const productCastCSVPath = '/home/wylie/coding/hackreactor/sdc/SDC-ProductInformation/database/product_cast.csv';
+  const productCastCSVPath = '/Users/wylie/Documents/coding/hackreactor/sdc/SDC-ProductInformation/database/product_cast.csv';
 
-  // let writeStream = fs.createWriteStream(productCastCSVPath);
+  let writeStream = fs.createWriteStream(productCastCSVPath);
 
-  // const values = [];
-  // for (let productId = 1; productId <= 10000000; productId++) {
-  //   for (let j = 0; j < 4; j++) {
-  //     writeStream.write(`${productId}, "${faker.name.findName()}"\n`);
-  //   }
-  // }
+  const values = [];
+  for (let productId = 1; productId <= 10000000; productId++) {
+    for (let j = 0; j < 4; j++) {
+      writeStream.write(`${productId}, "${faker.name.findName()}"\n`);
+    }
+  }
 
-  // writeStream.on('finish', () => {
-  //   console.log('writing to file finished');
-  // });
-  // writeStream.end();
+  writeStream.on('finish', () => {
+    console.log('writing to file finished');
+  });
+  writeStream.end();
 
   // having some trouble closing the writeStream
-  // await new Promise(r => setTimeout(r, 1000));
+  await new Promise(r => setTimeout(r, 3000));
 
   const tableName = 'PRODUCT_CAST';
   const columnNames = ['PRODUCT_ID', 'CAST_NAME'];
@@ -153,10 +153,10 @@ const seedProductCast = async function() {
 
 const seedDB = async function() {
   await client.connect();
-  // await seedRating();
-  // await seedFormat();
-  // await seedStudio();
-  // await seedProduct();
+  await seedRating();
+  await seedFormat();
+  await seedStudio();
+  await seedProduct();
   await seedProductCast();
   await client.end();
 }
