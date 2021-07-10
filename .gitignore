@@ -30,3 +30,6 @@ dist/
 
 #env
 .env
+
+#CSV for loading Postgres
+product.csv

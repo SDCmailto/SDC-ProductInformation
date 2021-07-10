@@ -6,6 +6,52 @@ const fs = require('fs');
 
 const client = new pg.Client();
 
+const executeSchema = async function() {
+  const statements = [
+    'DROP TABLE IF EXISTS PRODUCT;',
+    'DROP TABLE IF EXISTS STUDIO;',
+    'DROP TABLE IF EXISTS RATING;',
+    'DROP TABLE IF EXISTS FORMAT;',
+
+    `CREATE TABLE RATING (
+      RATING_ID SERIAL PRIMARY KEY,
+      RATING_NAME VARCHAR(5) NOT NULL UNIQUE
+    );`,
+
+    `CREATE TABLE FORMAT (
+      FORMAT_ID SERIAL PRIMARY KEY,
+      FORMAT_NAME VARCHAR(20) NOT NULL UNIQUE
+    );`,
+
+    `CREATE TABLE STUDIO (
+      STUDIO_ID SERIAL PRIMARY KEY,
+      STUDIO_NAME VARCHAR(255) NOT NULL UNIQUE
+    );`,
+
+    `CREATE TABLE PRODUCT (
+      PRODUCT_ID SERIAL PRIMARY KEY,
+      ASPECT_RATIO VARCHAR(255),
+      RATING_ID INT REFERENCES RATING(RATING_ID),
+      DIMENSIONS VARCHAR(255),
+      FORMAT_ID INT REFERENCES FORMAT(FORMAT_ID),
+      RUNTIME VARCHAR(255),
+      RELEASE_DATE DATE,
+      NUMBER_OF_DISKS INT,
+      CAST_LIST JSONB,
+      STUDIO_ID INT REFERENCES STUDIO(STUDIO_ID)
+    );`
+  ];
+
+  for (let statement of statements) {
+    try {
+      const res = await client.query(statement);
+      console.log(`success executeSchema, ${statement.split('(')[0]}: `, res);
+    } catch (err) {
+      console.log(`error executeSchema, ${statement.split('(')[0]}: `, err);
+    }
+  }
+};
+
 const seedRating = async function() {
   const tableName = 'RATING';
   const columnName = 'RATING_NAME';
@@ -78,6 +124,10 @@ const seedProduct = async function() {
   let writeStream = fs.createWriteStream(productCSVPath);
 
   for (let i = 0; i < 10000000; i++) {
+    let castList = [];
+    for (let j = 0; j < 4; j++) {
+      castList.push(faker.name.findName());
+    }
     let ASPECT_RATIO = (faker.datatype.number(5)) + ':' + (faker.datatype.number(5));
     let RATING_ID = Math.floor(Math.random() * ratingCount + 1);
     let DIMENSIONS = (faker.datatype.number(10)) + ' x ' + (faker.datatype.number(5)) + ' x ' + (faker.datatype.number(2)) + ' Inches';
@@ -89,7 +139,7 @@ const seedProduct = async function() {
 
     console.log(`writing record #${i}`)
 
-    writeStream.write(`"${ASPECT_RATIO}", ${RATING_ID}, "${DIMENSIONS}", ${FORMAT_ID}, "${RUNTIME}", "${RELEASE_DATE.getFullYear() + '-' + (RELEASE_DATE.getMonth() + 1).toString().padStart(2, '0') + '-' + (RELEASE_DATE.getDay() + 1).toString().padStart(2, '0')}", ${NUMBER_OF_DISKS}, ${STUDIO_ID}\n`);
+    writeStream.write(`"${ASPECT_RATIO}", ${RATING_ID}, "${DIMENSIONS}", ${FORMAT_ID}, "${RUNTIME}", "${RELEASE_DATE.getFullYear() + '-' + (RELEASE_DATE.getMonth() + 1).toString().padStart(2, '0') + '-' + (RELEASE_DATE.getDay() + 1).toString().padStart(2, '0')}", ${NUMBER_OF_DISKS}, "${JSON.stringify({ data: castList }).replace(/"/g, '""')}", ${STUDIO_ID}\n`);
   }
 
   writeStream.on('finish', () => {
@@ -101,7 +151,7 @@ const seedProduct = async function() {
   await new Promise(r => setTimeout(r, 3000));
 
   const tableName = 'PRODUCT';
-  const columnNames = ['ASPECT_RATIO', 'RATING_ID', 'DIMENSIONS', 'FORMAT_ID', 'RUNTIME', 'RELEASE_DATE', 'NUMBER_OF_DISKS', 'STUDIO_ID'];
+  const columnNames = ['ASPECT_RATIO', 'RATING_ID', 'DIMENSIONS', 'FORMAT_ID', 'RUNTIME', 'RELEASE_DATE', 'NUMBER_OF_DISKS', 'CAST_LIST', 'STUDIO_ID'];
 
   try {
     const query = `COPY ${tableName} (${columnNames.join(', ')}) FROM '${productCSVPath}' DELIMITER ',' csv;`
@@ -115,57 +165,14 @@ const seedProduct = async function() {
   }
 };
 
-// 4 cast members per product
-const seedProductCast = async function() {
-  const productCastCSVPath = '/Users/wylie/Documents/coding/hackreactor/sdc/SDC-ProductInformation/database/product_cast.csv';
-
-  let writeStream = fs.createWriteStream(productCastCSVPath);
-
-  const values = [];
-  for (let productId = 1; productId <= 10000000; productId++) {
-    for (let j = 0; j < 4; j++) {
-      writeStream.write(`${productId}, "${faker.name.findName()}"\n`);
-    }
-  }
-
-  writeStream.on('finish', () => {
-    console.log('writing to file finished');
-  });
-  writeStream.end();
-
-  // having some trouble closing the writeStream
-  await new Promise(r => setTimeout(r, 3000));
-
-  const tableName = 'PRODUCT_CAST';
-  const columnNames = ['PRODUCT_ID', 'CAST_NAME'];
-
-  try {
-    const query = `COPY ${tableName} (${columnNames.join(', ')}) FROM '${productCastCSVPath}' DELIMITER ',' csv;`
-
-    console.log(query);
-
-    const res = await client.query(query);
-    console.log('seedProductCast success: ', res);
-  } catch (err) {
-    console.log('seedProductCast error: ', err);
-  }
-};
-
 const seedDB = async function() {
   await client.connect();
+  await executeSchema();
   await seedRating();
   await seedFormat();
   await seedStudio();
   await seedProduct();
-  await seedProductCast();
   await client.end();
 }
-
-// async function test() {
-//   await client.connect();
-//   const res = await client.query('SELECT NOW()');
-//   console.log(res);
-//   await client.end();
-// };
 
 seedDB();
