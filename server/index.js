@@ -46,55 +46,74 @@ app.get('/:productId', function (req, res) {
 
 
 //API Call for specific product ID
-app.get('/Information/:productId', function (req, res) {
-  console.log('API CALL Specific DVD Request:', req.params.productId);
+// app.get('/Information/:productId', function (req, res) {
+//   console.log('API CALL Specific DVD Request:', req.params.productId);
 
-  if (req.params.productId) {
-    return db.returnData(req.params.productId)
-      .then((currentDVD) => {
-        console.log('Retrieved specific DVD', currentDVD);
-        res.json(currentDVD);
-      })
-      .catch((error) => {
-        console.log('Error retrieving specific DVD', error);
-      });
-  } else {
-    return db.returnData('1')
-      .then((currentDVD) => {
-        console.log('Retrieved specific DVD', currentDVD);
-        res.json(currentDVD);
-      })
-      .catch((error) => {
-        console.log('Error retrieving specific DVD', error);
-      });
-  }
-});
+//   if (req.params.productId) {
+//     return db.returnData(req.params.productId)
+//       .then((currentDVD) => {
+//         console.log('Retrieved specific DVD', currentDVD);
+//         res.json(currentDVD);
+//       })
+//       .catch((error) => {
+//         console.log('Error retrieving specific DVD', error);
+//       });
+//   } else {
+//     return db.returnData('1')
+//       .then((currentDVD) => {
+//         console.log('Retrieved specific DVD', currentDVD);
+//         res.json(currentDVD);
+//       })
+//       .catch((error) => {
+//         console.log('Error retrieving specific DVD', error);
+//       });
+//   }
+// });
 
 // CREATE
 app.post('/Information/', function (req, res) {
   console.log('CREATE route')
   const product = {
-    productId: req.body.productId,
-    aspectRatio: req.body.aspectRatio,
-    rating: req.body.rating,
-    dimensions: req.body.dimensions,
-    format: req.body.format,
-    runTime: req.body.runTime,
-    releaseDate: req.body.releaseDate,
-    cast: req.body.cast,
-    studio: req.body.studio,
-    numberOfDisks: req.body.numberOfDisks
+    ASPECT_RATIO: req.body.ASPECT_RATIO,
+    RATING_ID: req.body.RATING_ID,
+    DIMENSIONS: req.body.DIMENSIONS,
+    FORMAT_ID: req.body.FORMAT_ID,
+    RUNTIME: req.body.RUNTIME,
+    RELEASE_DATE: req.body.RELEASE_DATE,
+    CAST_LIST: req.body.CAST_LIST,
+    STUDIO_ID: req.body.STUDIO_ID,
+    NUMBER_OF_DISKS: req.body.NUMBER_OF_DISKS
   };
 
   console.log('product: ', product)
 
-  return db.createInformation(product)
+  return db.productCreate(product)
     .then(result => {
-      console.log('Create successful');
-      res.send(result);
+      if (result.error) {
+        res.status(404).json({ error: result.error })
+      }
+      console.log('Create success')
+      res.json(result);
     })
     .catch(err => {
-      console.log('Error in create route')
+      console.log('Error in create route', err)
+    });
+});
+
+// READ
+app.get('/Information/:productId', function (req, res) {
+  console.log('READ route:', req.params.productId);
+
+  db.productRead(req.params.productId)
+    .then(result => {
+      if (result.error) {
+        res.status(404).json({ error: result.error })
+      }
+      console.log('Read success', result);
+      res.json(result);
+    })
+    .catch((error) => {
+      console.log('Error retrieving specific DVD', error);
     });
 });
 
@@ -102,12 +121,26 @@ app.post('/Information/', function (req, res) {
 app.put('/Information/:productId', function (req, res) {
   console.log('UPDATE route')
 
-  console.log('req.body: ', req.body)
+  const product = {
+    PRODUCT_ID: req.params.productId,
+    ASPECT_RATIO: req.body.ASPECT_RATIO,
+    RATING_ID: req.body.RATING_ID,
+    DIMENSIONS: req.body.DIMENSIONS,
+    FORMAT_ID: req.body.FORMAT_ID,
+    RUNTIME: req.body.RUNTIME,
+    RELEASE_DATE: req.body.RELEASE_DATE,
+    CAST_LIST: req.body.CAST_LIST,
+    STUDIO_ID: req.body.STUDIO_ID,
+    NUMBER_OF_DISKS: req.body.NUMBER_OF_DISKS
+  };
 
-  return db.updateInformation(req.params.productId, req.body)
+  return db.productUpdate(product)
     .then(result => {
-      console.log('Update successful');
-      res.send(result);
+      if (result.error) {
+        res.status(404).json({ error: result.error })
+      }
+      console.log('Update successful', result);
+      res.json(result);
     })
     .catch(err => {
       console.log('Error in create route')
@@ -116,16 +149,18 @@ app.put('/Information/:productId', function (req, res) {
 
 // DELETE
 app.delete('/Information/:productId', function (req, res) {
-  console.log('DELETE route')
+  console.log('DELETE route', req.params.productId)
 
-  return db.deleteInformation(req.params.productId)
+  return db.productDelete(req.params.productId)
     .then(result => {
-      console.log('Delete successful');
-      res.send('Delete successful: ', result);
+      if (result.error) {
+        res.status(404).json({ error: result.error })
+      }
+      console.log('Delete successful', result);
+      res.json(result);
     })
     .catch(err => {
       console.log('Error in delete route: ', err)
-      res.send('Error in delete route: ', err);
     });
 });
 
