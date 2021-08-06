@@ -1,3 +1,4 @@
+const newrelic = require('newrelic')
 const express = require('express');
 const app = express();
 const port = 3001;
@@ -30,19 +31,19 @@ app.get('*/dp/:productId', (req, res) => {
 });
 
 //Specific Product Id Fetcher
-app.get('/:productId', function (req, res) {
-  if (req.params.productId === 'Information') {
-    return db.returnData('1')
-      .then((currentDVD) => {
-        console.log('Retrieved specific DVD', currentDVD);
-        res.json(currentDVD);
-      })
-      .catch((error) => {
-        console.log('Error retrieving specific DVD', error);
-      });
-  }
-  res.sendFile(path.join(__dirname, '..', 'public/index.html'));
-});
+// app.get('/:productId', function (req, res) {
+//   if (req.params.productId === 'Information') {
+//     return db.returnData('1')
+//       .then((currentDVD) => {
+//         console.log('Retrieved specific DVD', currentDVD);
+//         res.json(currentDVD);
+//       })
+//       .catch((error) => {
+//         console.log('Error retrieving specific DVD', error);
+//       });
+//   }
+//   res.sendFile(path.join(__dirname, '..', 'public/index.html'));
+// });
 
 
 //API Call for specific product ID
@@ -70,8 +71,13 @@ app.get('/:productId', function (req, res) {
 //   }
 // });
 
+// information.js
+app.get('/information.js', (req, res) => {
+  res.send('/information.js')
+})
+
 // CREATE
-app.post('/Information/', function (req, res) {
+app.post('/Information', function (req, res) {
   console.log('CREATE route')
   const product = {
     ASPECT_RATIO: req.body.ASPECT_RATIO,
@@ -85,7 +91,7 @@ app.post('/Information/', function (req, res) {
     NUMBER_OF_DISKS: req.body.NUMBER_OF_DISKS
   };
 
-  console.log('product: ', product)
+  // console.log('product: ', product)
 
   return db.productCreate(product)
     .then(result => {
@@ -97,6 +103,7 @@ app.post('/Information/', function (req, res) {
     })
     .catch(err => {
       console.log('Error in create route', err)
+      res.status(404).json({ error: 'error in productCreate' })
     });
 });
 
@@ -114,6 +121,7 @@ app.get('/Information/:productId', function (req, res) {
     })
     .catch((error) => {
       console.log('Error retrieving specific DVD', error);
+      res.status(404).json({ error: 'error in ProductRead' })
     });
 });
 
