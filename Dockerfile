@@ -1,6 +1,7 @@
-FROM node
-COPY . .
+FROM node:14-alpine
+WORKDIR /app
+COPY package*.json ./
 RUN npm install
-
+COPY . .
+CMD npm run serve
 EXPOSE 3001
-CMD ["node", "server/index.js"]

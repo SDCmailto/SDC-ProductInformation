@@ -22,13 +22,13 @@ class App extends React.Component {
 
   componentDidMount() {
     let that = this;
-    axios.get(`http://${this.informationip}:3001/Information/` + this.state.id)
-      .then((responseData) =>
+    axios.get(`http://localhost:3001/Information/` + this.state.id)
+      .then((responseData) => {
         that.setState({
           product: responseData.data,
-          cast: responseData.data.cast
+          cast: responseData.data.cast_list.data
         })
-      )
+      })
       .catch(function(error) {
         console.log('ERROR IN AXIOS GET REQUEST', error);
       });
@@ -47,6 +47,7 @@ class App extends React.Component {
 
 
   render() {
+    console.log('this.state: ', this.state)
     return (
       <ProductInfo product = {this.state.product} cast = {this.state.cast} avgReviews = {this.state.avgReviews} totalReviews = {this.state.totalReviews}/>
     );
