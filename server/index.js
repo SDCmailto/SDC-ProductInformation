@@ -1,4 +1,4 @@
-const newrelic = require('newrelic')
+// const newrelic = require('newrelic')
 const express = require('express');
 const app = express();
 const port = 3001;
@@ -7,7 +7,8 @@ const db = require('../database/index.js');
 const cors = require('cors');
 const shrinkRay = require('shrink-ray-current');
 const bodyParser = require('body-parser');
-
+const redis = require("redis");
+const client = redis.createClient();
 
 app.options('*', cors());
 app.get('*', cors());
@@ -16,6 +17,10 @@ app.use(shrinkRay());
 app.use(bodyParser.json());
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
+
+client.on("error", function(error) {
+  console.error(error);
+});
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -73,7 +78,8 @@ app.get('*/dp/:productId', (req, res) => {
 
 // information.js
 app.get('/information.js', (req, res) => {
-  res.send('/information.js')
+  // res.send('/information.js')
+  res.send('https://sdc-productinformation.s3.us-east-2.amazonaws.com/information.js')
 })
 
 // CREATE
@@ -111,18 +117,32 @@ app.post('/Information', function (req, res) {
 app.get('/Information/:productId', function (req, res) {
   console.log('READ route:', req.params.productId);
 
-  db.productRead(req.params.productId)
-    .then(result => {
-      if (result.error) {
-        res.status(404).json({ error: result.error })
+  try {
+    client.get(req.params.productId, async (err, result) => {
+      if (err) throw err;
+
+      if (result) {
+        console.log('retrieved from cache: ', result)
+        res.send(JSON.parse(result))
+      } else {
+        db.productRead(req.params.productId)
+        .then(result => {
+          if (result.error) {
+            res.status(404).json({ error: result.error })
+          }
+          client.setex(req.params.productId, 1, JSON.stringify(result))
+          console.log('Read success', result);
+          res.json(result);
+        })
+        .catch((error) => {
+          console.log('Error retrieving specific DVD', error);
+          res.status(404).json({ error: 'error in ProductRead' })
+        });
       }
-      console.log('Read success', result);
-      res.json(result);
     })
-    .catch((error) => {
-      console.log('Error retrieving specific DVD', error);
-      res.status(404).json({ error: 'error in ProductRead' })
-    });
+  } catch(err) {
+    res.status(500).json({ error: 'error in READ route' })
+  }
 });
 
 // UPDATE
