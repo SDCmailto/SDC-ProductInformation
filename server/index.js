@@ -78,8 +78,7 @@ app.get('*/dp/:productId', (req, res) => {
 
 // information.js
 app.get('/information.js', (req, res) => {
-  // res.send('/information.js')
-  res.send('https://sdc-productinformation.s3.us-east-2.amazonaws.com/information.js')
+  res.send('/information.js')
 })
 
 // CREATE
