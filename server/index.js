@@ -1,3 +1,4 @@
+// const newrelic = require('newrelic')
 const express = require('express');
 const app = express();
 const port = 3001;
@@ -6,7 +7,8 @@ const db = require('../database/index.js');
 const cors = require('cors');
 const shrinkRay = require('shrink-ray-current');
 const bodyParser = require('body-parser');
-
+const redis = require("redis");
+const client = redis.createClient();
 
 app.options('*', cors());
 app.get('*', cors());
@@ -15,6 +17,10 @@ app.use(shrinkRay());
 app.use(bodyParser.json());
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
+
+client.on("error", function(error) {
+  console.error(error);
+});
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -30,19 +36,19 @@ app.get('*/dp/:productId', (req, res) => {
 });
 
 //Specific Product Id Fetcher
-app.get('/:productId', function (req, res) {
-  if (req.params.productId === 'Information') {
-    return db.returnData('1')
-      .then((currentDVD) => {
-        console.log('Retrieved specific DVD', currentDVD);
-        res.json(currentDVD);
-      })
-      .catch((error) => {
-        console.log('Error retrieving specific DVD', error);
-      });
-  }
-  res.sendFile(path.join(__dirname, '..', 'public/index.html'));
-});
+// app.get('/:productId', function (req, res) {
+//   if (req.params.productId === 'Information') {
+//     return db.returnData('1')
+//       .then((currentDVD) => {
+//         console.log('Retrieved specific DVD', currentDVD);
+//         res.json(currentDVD);
+//       })
+//       .catch((error) => {
+//         console.log('Error retrieving specific DVD', error);
+//       });
+//   }
+//   res.sendFile(path.join(__dirname, '..', 'public/index.html'));
+// });
 
 
 //API Call for specific product ID
@@ -70,8 +76,14 @@ app.get('/:productId', function (req, res) {
 //   }
 // });
 
+// information.js
+app.get('/information.js', (req, res) => {
+  // res.send('/information.js')
+  res.send('https://sdc-productinformation.s3.us-east-2.amazonaws.com/information.js')
+})
+
 // CREATE
-app.post('/Information/', function (req, res) {
+app.post('/Information', function (req, res) {
   console.log('CREATE route')
   const product = {
     ASPECT_RATIO: req.body.ASPECT_RATIO,
@@ -85,7 +97,7 @@ app.post('/Information/', function (req, res) {
     NUMBER_OF_DISKS: req.body.NUMBER_OF_DISKS
   };
 
-  console.log('product: ', product)
+  // console.log('product: ', product)
 
   return db.productCreate(product)
     .then(result => {
@@ -97,6 +109,7 @@ app.post('/Information/', function (req, res) {
     })
     .catch(err => {
       console.log('Error in create route', err)
+      res.status(404).json({ error: 'error in productCreate' })
     });
 });
 
@@ -104,17 +117,32 @@ app.post('/Information/', function (req, res) {
 app.get('/Information/:productId', function (req, res) {
   console.log('READ route:', req.params.productId);
 
-  db.productRead(req.params.productId)
-    .then(result => {
-      if (result.error) {
-        res.status(404).json({ error: result.error })
+  try {
+    client.get(req.params.productId, async (err, result) => {
+      if (err) throw err;
+
+      if (result) {
+        console.log('retrieved from cache: ', result)
+        res.send(JSON.parse(result))
+      } else {
+        db.productRead(req.params.productId)
+        .then(result => {
+          if (result.error) {
+            res.status(404).json({ error: result.error })
+          }
+          client.setex(req.params.productId, 1, JSON.stringify(result))
+          console.log('Read success', result);
+          res.json(result);
+        })
+        .catch((error) => {
+          console.log('Error retrieving specific DVD', error);
+          res.status(404).json({ error: 'error in ProductRead' })
+        });
       }
-      console.log('Read success', result);
-      res.json(result);
     })
-    .catch((error) => {
-      console.log('Error retrieving specific DVD', error);
-    });
+  } catch(err) {
+    res.status(500).json({ error: 'error in READ route' })
+  }
 });
 
 // UPDATE

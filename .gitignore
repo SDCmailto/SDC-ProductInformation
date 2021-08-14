@@ -33,3 +33,10 @@ dist/
 
 #CSV for loading Postgres
 product.csv
+
+#newrelic
+newrelic.js
+newrelic_agent.log
+
+#bundle
+public/information.js
